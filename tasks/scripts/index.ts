@@ -1,2 +1,0 @@
-import "./egAirdrop";
-import "./endGame";
