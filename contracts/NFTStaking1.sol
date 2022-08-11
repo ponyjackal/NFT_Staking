@@ -39,7 +39,7 @@ contract NFTStaking1 is Ownable, ReentrancyGuard {
     event NFTUnLocked(address indexed owner, uint256[] tokenIds);
     event RewardsClaimed(address indexed owner, uint256[] tokenIds, uint256 rewards);
 
-    constructor(address _rewardsToken, address _stakeNFT) {
+    constructor(address _stakeNFT, address _rewardsToken) {
         require(_rewardsToken != address(0), "Invalid reward token");
         require(_stakeNFT != address(0), "Invalid stake NFT");
         require(IERC165(_stakeNFT).supportsInterface(0x80ac58cd), "Non-erc721");

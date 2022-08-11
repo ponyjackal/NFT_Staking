@@ -4,7 +4,7 @@ import * as path from "path";
 
 dotenvConfig({ path: path.resolve(__dirname, "../../../.env") });
 
-type FileName = "rewardsToken" | "rewardsNFT" | "nftStaking1" | "nftStaking2";
+type FileName = "rewardsToken" | "rewardsNFT" | "stakeNFT" | "nftStaking1" | "nftStaking2";
 
 export const ZERO_ADDRESS = "0x" + "0".repeat(40);
 

@@ -13,7 +13,7 @@ task("deploy:NFTStaking1").setAction(async function (taskArguments: TaskArgument
   const factory: NFTStaking1__factory = <NFTStaking1__factory>await ethers.getContractFactory("EndGame", accounts[0]);
 
   const contract: NFTStaking1 = <NFTStaking1>await factory.deploy(ZERO_ADDRESS, "");
-  await contract.deployed();
+  await contract.deployed(cArguments.STAKE_NFT_ADDRESS, cArguments.REWARDS_TOKEN_ADDRESS);
 
   writeContractAddress("nftStaking1", contract.address);
   console.log("NFTStaking1 deployed to: ", contract.address);
@@ -24,6 +24,6 @@ task("verify:NFTStaking1").setAction(async function (taskArguments: TaskArgument
 
   await run("verify:verify", {
     address,
-    constructorArguments: [ZERO_ADDRESS, ""],
+    constructorArguments: [cArguments.STAKE_NFT_ADDRESS, cArguments.REWARDS_TOKEN_ADDRESS],
   });
 });
