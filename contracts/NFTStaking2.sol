@@ -7,11 +7,13 @@ import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
+import "./interfaces/IRewardsNFT.sol";
+
 contract NFTStaking2 is Ownable, ReentrancyGuard {
     using Address for address;
     // Interfaces for ERC721
     IERC721 public immutable stakeNFT;
-    IERC721 public immutable rewardsNFT;
+    IRewardsNFT public immutable rewardsNFT;
 
     uint256 public lockPeriod;
 
@@ -44,7 +46,7 @@ contract NFTStaking2 is Ownable, ReentrancyGuard {
         require(IERC165(_stakeNFT).supportsInterface(0x80ac58cd), "Non-erc721");
 
         stakeNFT = IERC721(_stakeNFT);
-        rewardsNFT = IERC721(_rewardsNFT);
+        rewardsNFT = IRewardsNFT(_rewardsNFT);
     }
 
     /** MODIFIERS */
@@ -109,7 +111,7 @@ contract NFTStaking2 is Ownable, ReentrancyGuard {
 
             uint256 totalAmount = _rewardAmount(_tokenIds[i]);
             uint256 unclaminedAmount = totalAmount - info.claimedRewards;
-            // rewardsToken.safeTransferFrom(vaultWallet, msg.sender, unclaminedAmount);
+            rewardsNFT.mintRewards(msg.sender, unclaminedAmount);
 
             lockInfo[_tokenIds[i]].claimedRewards = totalAmount;
             lockInfo[_tokenIds[i]].isUnlocked = true;
@@ -134,7 +136,7 @@ contract NFTStaking2 is Ownable, ReentrancyGuard {
 
             uint256 totalAmount = _rewardAmount(_tokenIds[i]);
             uint256 unclaminedAmount = totalAmount - info.claimedRewards;
-            // rewardsToken.safeTransferFrom(vaultWallet, msg.sender, unclaminedAmount);
+            rewardsNFT.mintRewards(msg.sender, unclaminedAmount);
             totalRewards += unclaminedAmount;
 
             lockInfo[_tokenIds[i]].claimedRewards = totalAmount;
@@ -154,7 +156,7 @@ contract NFTStaking2 is Ownable, ReentrancyGuard {
         if (stakingDuration < lockPeriod) {
             return 0;
         } else {
-            // totalAmount = initialRewards + rewardsPerWave * (stakingDuration - lockPeriod) / WAVE;
+            totalAmount = initialAmount + (amountPerWave * (stakingDuration - lockPeriod)) / WAVE;
             return totalAmount;
         }
     }

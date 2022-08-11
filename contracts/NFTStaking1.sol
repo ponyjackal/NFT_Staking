@@ -15,7 +15,6 @@ contract NFTStaking1 is Ownable, ReentrancyGuard {
     IRewardsToken public immutable rewardsToken;
     IERC721 public immutable stakeNFT;
 
-    address internal vaultWallet;
     uint256 public lockPeriod;
 
     struct LockInfo {
