@@ -4,7 +4,7 @@ import { TaskArguments } from "hardhat/types";
 
 import { NFTStaking1 } from "../../src/types/contracts/NFTStaking1";
 import { NFTStaking1__factory } from "../../src/types/factories/contracts/NFTStaking1__factory";
-import { ZERO_ADDRESS, readContractAddress, writeContractAddress } from "./addresses/utils";
+import { readContractAddress, writeContractAddress } from "./addresses/utils";
 import cArguments from "./arguments/nftStaking1";
 
 task("deploy:NFTStaking1").setAction(async function (taskArguments: TaskArguments, { ethers }) {
@@ -15,7 +15,7 @@ task("deploy:NFTStaking1").setAction(async function (taskArguments: TaskArgument
   );
 
   const contract: NFTStaking1 = <NFTStaking1>(
-    await factory.deploy(cArguments.STAKE_NFT_ADDRESS, cArguments.REWARDS_TOKEN_ADDRESS)
+    await factory.deploy(cArguments.STAKE_NFT_ADDRESS, cArguments.REWARDS_TOKEN_ADDRESS, cArguments.LOCK_PERIOD)
   );
   await contract.deployed();
 
@@ -28,6 +28,6 @@ task("verify:NFTStaking1").setAction(async function (taskArguments: TaskArgument
 
   await run("verify:verify", {
     address,
-    constructorArguments: [cArguments.STAKE_NFT_ADDRESS, cArguments.REWARDS_TOKEN_ADDRESS],
+    constructorArguments: [cArguments.STAKE_NFT_ADDRESS, cArguments.REWARDS_TOKEN_ADDRESS, cArguments.LOCK_PERIOD],
   });
 });

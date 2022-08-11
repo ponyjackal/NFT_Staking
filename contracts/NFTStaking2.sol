@@ -27,7 +27,7 @@ contract NFTStaking2 is Ownable, ReentrancyGuard {
     mapping(uint256 => LockInfo) internal lockInfo;
 
     /** CONSTANTS */
-    uint256 public constant WAVE = 30 days;
+    uint256 public constant WAVE = 10 minutes;
     uint256 public constant initialAmount = 1;
     uint256 public constant amountPerWave = 1;
 
@@ -39,14 +39,20 @@ contract NFTStaking2 is Ownable, ReentrancyGuard {
     event NFTUnLocked(address indexed owner, uint256[] tokenIds);
     event RewardsClaimed(address indexed owner, uint256[] tokenIds, uint256 rewards);
 
-    constructor(address _stakeNFT, address _rewardsNFT) {
+    constructor(
+        address _stakeNFT,
+        address _rewardsNFT,
+        uint256 _lockPeriod
+    ) {
         require(_stakeNFT != address(0), "Invalid stake NFT");
         require(_rewardsNFT != address(0), "Invalid reward NFT");
         require(IERC165(_rewardsNFT).supportsInterface(0x80ac58cd), "Non-erc721");
         require(IERC165(_stakeNFT).supportsInterface(0x80ac58cd), "Non-erc721");
+        require(_lockPeriod > 0, "Invalid lock period");
 
         stakeNFT = IERC721(_stakeNFT);
         rewardsNFT = IRewardsNFT(_rewardsNFT);
+        lockPeriod = _lockPeriod;
     }
 
     /** MODIFIERS */

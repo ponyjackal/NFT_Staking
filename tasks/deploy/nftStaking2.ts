@@ -15,7 +15,7 @@ task("deploy:NFTStaking2").setAction(async function (taskArguments: TaskArgument
   );
 
   const contract: NFTStaking2 = <NFTStaking2>(
-    await factory.deploy(cArguments.STAKE_NFT_ADDRESS, cArguments.REWARDS_NFT_ADDRESS)
+    await factory.deploy(cArguments.STAKE_NFT_ADDRESS, cArguments.REWARDS_NFT_ADDRESS, cArguments.LOCK_PERIOD)
   );
   await contract.deployed();
 
@@ -28,6 +28,6 @@ task("verify:NFTStaking2").setAction(async function (taskArguments: TaskArgument
 
   await run("verify:verify", {
     address,
-    constructorArguments: [cArguments.STAKE_NFT_ADDRESS, cArguments.REWARDS_NFT_ADDRESS],
+    constructorArguments: [cArguments.STAKE_NFT_ADDRESS, cArguments.REWARDS_NFT_ADDRESS, cArguments.LOCK_PERIOD],
   });
 });
