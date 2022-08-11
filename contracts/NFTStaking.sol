@@ -12,7 +12,7 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 contract NFTStaking is Ownable, ReentrancyGuard {
     using Address for address;
     using SafeERC20 for IERC20;
-
+    // Interfaces for ERC20 and ERC721
     IERC20 public immutable rewardsToken;
     IERC721 public immutable stakeNFT;
     IERC721 public immutable rewardsNFT;
@@ -25,11 +25,10 @@ contract NFTStaking is Ownable, ReentrancyGuard {
     struct LockInfo {
         address owner;
         uint256 lockedTime;
-        uint256 tokenId;
         uint256 claimedRewards;
         bool isUnlocked;
     }
-
+    // mapping tokenId => LockInfo
     mapping(uint256 => LockInfo) internal lockInfo;
     address internal vaultWallet;
 
@@ -37,7 +36,7 @@ contract NFTStaking is Ownable, ReentrancyGuard {
     // EVENTS
     //-------------------------------------------------------------------------
     event LockPeriodUpdated(uint256 lockPeriod);
-    event NFTLocked(address indexed owner, uint256 indexed tokenId);
+    event NFTLocked(address indexed owner, uint256[] tokenIds);
     event NFTUnLocked(address indexed owner, uint256 indexed tokenId);
     event RewardsClaimed(address indexed owner, uint256 indexed tokenId, uint256 rewards);
 
@@ -73,14 +72,19 @@ contract NFTStaking is Ownable, ReentrancyGuard {
     }
 
     /**
-    * @dev lock NFT into the contract
-    * @param _tokenId token id to stake
+    * @dev batch lock NFT into the contract
+    * @param _tokenIds token id to stake
     */
-    function lockNFT(uint256 _tokenId) external notContract nonReentrant {
-        stakeNFT.transferFrom(msg.sender, address(this), _tokenId);
-        lockInfo[_tokenId] = LockInfo(msg.sender, block.timestamp, _tokenId, 0, false);
+    function lockNFT(uint256[] calldata _tokenIds) external notContract nonReentrant {
+        require(_tokenIds.length > 0, "No tokens");
+        
+        for(uint256 i = 0; i < _tokenIds.length; i++) {
+            require(stakeNFT.ownerOf(_tokenIds[i]) == msg.sender, "You don't hold this token");
+            stakeNFT.transferFrom(msg.sender, address(this), _tokenIds[i]);
+            lockInfo[_tokenIds[i]] = LockInfo(msg.sender, block.timestamp, 0, false);
+        }
 
-        emit NFTLocked(msg.sender, _tokenId);
+        emit NFTLocked(msg.sender, _tokenIds);
     }
 
     /**
@@ -90,7 +94,7 @@ contract NFTStaking is Ownable, ReentrancyGuard {
     function unlockNFT(uint256 _tokenId) external notContract nonReentrant {
         LockInfo memory info = lockInfo[_tokenId];
         require(info.owner == msg.sender, "Not a token owner");
-        require(info.lockedTime + lockPeriod < block.timestamp, "Not able to claim yet");
+        require(info.lockedTime + lockPeriod < block.timestamp, "Not able to unlock yet");
         require(!info.isUnlocked, "Already unlocked");
 
         stakeNFT.transferFrom(address(this), msg.sender, _tokenId);
@@ -113,6 +117,7 @@ contract NFTStaking is Ownable, ReentrancyGuard {
         LockInfo memory info = lockInfo[_tokenId];
         require(info.owner == msg.sender, "Not a token owner");
         require(info.lockedTime + lockPeriod < block.timestamp, "Not able to claim yet");
+        require(!info.isUnlocked, "Already unlocked");
 
         uint256 totalAmount = _rewardAmount(_tokenId);
         uint256 unclaminedAmount = totalAmount - info.claimedRewards;
