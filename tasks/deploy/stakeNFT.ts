@@ -2,27 +2,28 @@ import { Signer } from "@ethersproject/abstract-signer";
 import { task } from "hardhat/config";
 import { TaskArguments } from "hardhat/types";
 
-import { RewardsNFT } from "../../src/types/contracts/RewardsNFT";
-import { RewardsNFT__factory } from "../../src/types/factories/contracts/RewardsNFT__factory";
-import { ZERO_ADDRESS, readContractAddress, writeContractAddress } from "./addresses/utils";
+import { StakeNFT } from "../../src/types/contracts/StakeNFT";
+import { StakeNFT__factory } from "../../src/types/factories/contracts/StakeNFT__factory";
+import { readContractAddress, writeContractAddress } from "./addresses/utils";
+import cArguments from "./arguments/stakeNFT";
 
-task("deploy:RewardsNFT").setAction(async function (taskArguments: TaskArguments, { ethers }) {
+task("deploy:StakeNFT").setAction(async function (taskArguments: TaskArguments, { ethers }) {
   const accounts: Signer[] = await ethers.getSigners();
 
-  const factory: RewardsNFT__factory = <RewardsNFT__factory>await ethers.getContractFactory("EndGame", accounts[0]);
+  const factory: StakeNFT__factory = <StakeNFT__factory>await ethers.getContractFactory("StakeNFT", accounts[0]);
 
-  const contract: RewardsNFT = <RewardsNFT>await factory.deploy(ZERO_ADDRESS, "");
+  const contract: StakeNFT = <StakeNFT>await factory.deploy(cArguments.TOKEN_URI);
   await contract.deployed();
 
-  writeContractAddress("rewardsNFT", contract.address);
-  console.log("RewardsNFT deployed to: ", contract.address);
+  writeContractAddress("stakeNFT", contract.address);
+  console.log("StakeNFT deployed to: ", contract.address);
 });
 
-task("verify:RewardsNFT").setAction(async function (taskArguments: TaskArguments, { run }) {
-  const address = readContractAddress("rewardsNFT");
+task("verify:StakeNFT").setAction(async function (taskArguments: TaskArguments, { run }) {
+  const address = readContractAddress("stakeNFT");
 
   await run("verify:verify", {
     address,
-    constructorArguments: [ZERO_ADDRESS, ""],
+    constructorArguments: [cArguments.TOKEN_URI],
   });
 });

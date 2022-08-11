@@ -9,7 +9,9 @@ import { ZERO_ADDRESS, readContractAddress, writeContractAddress } from "./addre
 task("deploy:RewardsToken").setAction(async function (taskArguments: TaskArguments, { ethers }) {
   const accounts: Signer[] = await ethers.getSigners();
 
-  const factory: RewardsToken__factory = <RewardsToken__factory>await ethers.getContractFactory("EndGame", accounts[0]);
+  const factory: RewardsToken__factory = <RewardsToken__factory>(
+    await ethers.getContractFactory("RewardsToken", accounts[0])
+  );
 
   const contract: RewardsToken = <RewardsToken>await factory.deploy(ZERO_ADDRESS);
   await contract.deployed();

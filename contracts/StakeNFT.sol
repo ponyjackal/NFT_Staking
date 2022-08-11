@@ -4,7 +4,7 @@ pragma solidity >=0.8.4;
 import "erc721a/contracts/ERC721A.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract Stake is ERC721A, Ownable {
+contract StakeNFT is ERC721A, Ownable {
     string private _baseTokenURI;
 
     /** EVENTS */
