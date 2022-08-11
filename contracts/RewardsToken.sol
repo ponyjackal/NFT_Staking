@@ -11,7 +11,7 @@ contract RewardsToken is ERC20, Ownable {
     event StakingContractUpdated(address indexed nftStakingContract);
     event TokenMinted(address indexed to, uint256 amount);
 
-    constructor(address _nftStakingContract) ERC20("Reward Token", "RWT") {
+    constructor(address _nftStakingContract) ERC20("Rewards Token", "RWT") {
         require(_nftStakingContract != address(0), "Invalid address");
         nftStakingContract = _nftStakingContract;
     }

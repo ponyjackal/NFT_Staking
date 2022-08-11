@@ -12,7 +12,7 @@ contract RewardsNFT is ERC721A, Ownable {
     event StakingContractUpdated(address indexed nftStakingContract);
     event TokenMinted(address indexed to, uint256 amount);
 
-    constructor(address _nftStakingContract, string memory _baseuri) ERC721A("Reward NFT", "RWN") {
+    constructor(address _nftStakingContract, string memory _baseuri) ERC721A("Rewards NFT", "RWN") {
         require(_nftStakingContract != address(0), "Invalid address");
         nftStakingContract = _nftStakingContract;
         _baseTokenURI = _baseuri;
