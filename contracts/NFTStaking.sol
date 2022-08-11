@@ -38,7 +38,7 @@ contract NFTStaking is Ownable, ReentrancyGuard {
     event LockPeriodUpdated(uint256 lockPeriod);
     event NFTLocked(address indexed owner, uint256[] tokenIds);
     event NFTUnLocked(address indexed owner, uint256[] tokenIds);
-    event RewardsClaimed(address indexed owner, uint256 indexed tokenId, uint256 rewards);
+    event RewardsClaimed(address indexed owner, uint256[] tokenIds, uint256 rewards);
 
     constructor(address _rewardsToken, address _stakeNFT, address _rewardsNFT) {
         require(_rewardsToken != address(0), "Invalid reward token");
@@ -115,21 +115,28 @@ contract NFTStaking is Ownable, ReentrancyGuard {
 
     /**
     * @dev claim rewards
-    * @param _tokenId token id to unlock
+    * @param _tokenIds token id to unlock
     */
-    function claimRewards(uint256 _tokenId) external notContract {
-        LockInfo memory info = lockInfo[_tokenId];
-        require(info.owner == msg.sender, "Not a token owner");
-        require(info.lockedTime + lockPeriod < block.timestamp, "Not able to claim yet");
-        require(!info.isUnlocked, "Already unlocked");
+    function claimRewards(uint256[] calldata _tokenIds) external notContract {
+        require(_tokenIds.length > 0, "No tokens");
+        
+        uint256 totalRewards;
+        for(uint256 i = 0; i < _tokenIds.length; i++) {
+            LockInfo memory info = lockInfo[_tokenIds[i]];
+            require(info.owner == msg.sender, "Not a token owner");
+            require(info.lockedTime + lockPeriod < block.timestamp, "Not able to claim yet");
+            require(!info.isUnlocked, "Already unlocked");
 
-        uint256 totalAmount = _rewardAmount(_tokenId);
-        uint256 unclaminedAmount = totalAmount - info.claimedRewards;
-        rewardsToken.transferFrom(vaultWallet, msg.sender, unclaminedAmount);
+            uint256 totalAmount = _rewardAmount(_tokenIds[i]);
+            uint256 unclaminedAmount = totalAmount - info.claimedRewards;
+            rewardsToken.transferFrom(vaultWallet, msg.sender, unclaminedAmount);
+            totalRewards += unclaminedAmount;
 
-        lockInfo[_tokenId].claimedRewards = totalAmount;
+            lockInfo[_tokenIds[i]].claimedRewards = totalAmount; 
+        }
+        
 
-        emit RewardsClaimed(msg.sender, _tokenId, unclaminedAmount);
+        emit RewardsClaimed(msg.sender, _tokenIds, totalRewards);
     }
 
     /**
