@@ -17,10 +17,10 @@ contract NFTStaking is Ownable, ReentrancyGuard {
     IERC721 public immutable stakeNFT;
     IERC721 public immutable rewardsNFT;
 
-    uint256 public constant WAVE = 30 days;
     uint256 public lockPeriod;
-    uint256 public rewardAmount;
-    uint256 public apyAmount;
+    uint256 public constant WAVE = 30 days;
+    uint256 public constant initialRewards = 100000;
+    uint256 public constant rewardsPerWave = 10000;
 
     struct LockInfo {
         address owner;
@@ -72,8 +72,8 @@ contract NFTStaking is Ownable, ReentrancyGuard {
     }
 
     /**
-    * @dev batch lock NFT into the contract
-    * @param _tokenIds token id to stake
+    * @dev lock NFT into the contract
+    * @param _tokenIds token ids to stake
     */
     function lockNFT(uint256[] calldata _tokenIds) external notContract nonReentrant {
         require(_tokenIds.length > 0, "No tokens");
@@ -89,7 +89,7 @@ contract NFTStaking is Ownable, ReentrancyGuard {
 
     /**
     * @dev unlock NFT from the contract
-    * @param _tokenIds token id to unlock
+    * @param _tokenIds token ids to unlock
     */
     function unlockNFT(uint256[] calldata _tokenIds) external notContract nonReentrant {
         require(_tokenIds.length > 0, "No tokens");
@@ -115,7 +115,7 @@ contract NFTStaking is Ownable, ReentrancyGuard {
 
     /**
     * @dev claim rewards
-    * @param _tokenIds token id to unlock
+    * @param _tokenIds token ids to unlock
     */
     function claimRewards(uint256[] calldata _tokenIds) external notContract {
         require(_tokenIds.length > 0, "No tokens");
@@ -135,7 +135,6 @@ contract NFTStaking is Ownable, ReentrancyGuard {
             lockInfo[_tokenIds[i]].claimedRewards = totalAmount; 
         }
         
-
         emit RewardsClaimed(msg.sender, _tokenIds, totalRewards);
     }
 
@@ -151,8 +150,7 @@ contract NFTStaking is Ownable, ReentrancyGuard {
             return 0;
         }
         else{
-            // TODO; need to calculate APY
-            totalAmount = rewardAmount + apyAmount * stakingDuration / lockPeriod;
+            totalAmount = initialRewards + rewardsPerWave * (stakingDuration - lockPeriod) / WAVE;
             return totalAmount;
         }
     }
