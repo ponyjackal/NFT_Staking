@@ -6,20 +6,27 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract RewardNFT is ERC721A, Ownable {
     address public nftStakingContract;
+    string private _baseTokenURI;
 
     /** EVENTS */
     event StakingContractUpdated(address indexed nftStakingContract);
     event TokenMinted(address indexed to, uint256 amount);
 
-    constructor(address _nftStakingContract) ERC721A("Reward NFT", "RWN") {
+    constructor(address _nftStakingContract, string memory _baseuri) ERC721A("Reward NFT", "RWN") {
         require(_nftStakingContract != address(0), "Invalid address");
         nftStakingContract = _nftStakingContract;
+        _baseTokenURI = _baseuri;
     }
 
     /** MODIFIERS */
     modifier onlyStakingContract() {
         require(msg.sender == nftStakingContract, "Non staking contract");
         _;
+    }
+
+    /** VIEW FUNCTIONS */
+    function _baseURI() internal view virtual override returns (string memory) {
+        return _baseTokenURI;
     }
 
     /** SETTERS */
@@ -29,6 +36,12 @@ contract RewardNFT is ERC721A, Ownable {
 
         emit StakingContractUpdated(_nftStakingContract);
     }
+
+    function setBaseURI(string calldata baseURI) external onlyOwner {
+        _baseTokenURI = baseURI;
+    }
+
+    /** MUTATIVE FUNCTIONS */
 
     function mintRewards(address _to, uint256 _amount) external onlyStakingContract {
         require(_to != address(0), "Invalid address");
