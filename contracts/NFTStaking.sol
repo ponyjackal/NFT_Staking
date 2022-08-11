@@ -71,6 +71,16 @@ contract NFTStaking is Ownable, ReentrancyGuard {
         emit LockPeriodUpdated(_lockPeriod);
     }
 
+    /** VIEW FUNCTIONS */
+    /**
+    * @dev get total claimed rewards for token id
+    * @param _tokenId token id to get claimed Rewards amount
+    */
+    function claimedRewards(uint256 _tokenId) external view returns (uint256) {
+        return lockInfo[_tokenId].claimedRewards;
+    }
+    
+    /** MUTATIVE FUNCTIONS */
     /**
     * @dev lock NFT into the contract
     * @param _tokenIds token ids to stake
@@ -104,7 +114,7 @@ contract NFTStaking is Ownable, ReentrancyGuard {
             
             uint256 totalAmount = _rewardAmount(_tokenIds[i]);
             uint256 unclaminedAmount = totalAmount - info.claimedRewards;
-            rewardsToken.transferFrom(vaultWallet, msg.sender, unclaminedAmount);
+            rewardsToken.safeTransferFrom(vaultWallet, msg.sender, unclaminedAmount);
 
             lockInfo[_tokenIds[i]].claimedRewards = totalAmount;
             lockInfo[_tokenIds[i]].isUnlocked = true;
@@ -129,7 +139,7 @@ contract NFTStaking is Ownable, ReentrancyGuard {
 
             uint256 totalAmount = _rewardAmount(_tokenIds[i]);
             uint256 unclaminedAmount = totalAmount - info.claimedRewards;
-            rewardsToken.transferFrom(vaultWallet, msg.sender, unclaminedAmount);
+            rewardsToken.safeTransferFrom(vaultWallet, msg.sender, unclaminedAmount);
             totalRewards += unclaminedAmount;
 
             lockInfo[_tokenIds[i]].claimedRewards = totalAmount; 
