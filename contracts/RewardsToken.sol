@@ -5,8 +5,6 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract RewardsToken is ERC20, Ownable {
-    uint256 public constant TOTAL_SUPPLY = 10**8 * 10**18;
-
     address public nftStakingContract;
 
     /** EVENTS */
