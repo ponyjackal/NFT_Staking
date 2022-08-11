@@ -37,7 +37,7 @@ contract NFTStaking is Ownable, ReentrancyGuard {
     //-------------------------------------------------------------------------
     event LockPeriodUpdated(uint256 lockPeriod);
     event NFTLocked(address indexed owner, uint256[] tokenIds);
-    event NFTUnLocked(address indexed owner, uint256 indexed tokenId);
+    event NFTUnLocked(address indexed owner, uint256[] tokenIds);
     event RewardsClaimed(address indexed owner, uint256 indexed tokenId, uint256 rewards);
 
     constructor(address _rewardsToken, address _stakeNFT, address _rewardsNFT) {
@@ -89,24 +89,28 @@ contract NFTStaking is Ownable, ReentrancyGuard {
 
     /**
     * @dev unlock NFT from the contract
-    * @param _tokenId token id to unlock
+    * @param _tokenIds token id to unlock
     */
-    function unlockNFT(uint256 _tokenId) external notContract nonReentrant {
-        LockInfo memory info = lockInfo[_tokenId];
-        require(info.owner == msg.sender, "Not a token owner");
-        require(info.lockedTime + lockPeriod < block.timestamp, "Not able to unlock yet");
-        require(!info.isUnlocked, "Already unlocked");
+    function unlockNFT(uint256[] calldata _tokenIds) external notContract nonReentrant {
+        require(_tokenIds.length > 0, "No tokens");
 
-        stakeNFT.transferFrom(address(this), msg.sender, _tokenId);
-        
-        uint256 totalAmount = _rewardAmount(_tokenId);
-        uint256 unclaminedAmount = totalAmount - info.claimedRewards;
-        rewardsToken.transferFrom(vaultWallet, msg.sender, unclaminedAmount);
+        for(uint256 i = 0; i < _tokenIds.length; i++) {
+            LockInfo memory info = lockInfo[_tokenIds[i]];
+            require(info.owner == msg.sender, "Not a token owner");
+            require(info.lockedTime + lockPeriod < block.timestamp, "Not able to unlock yet");
+            require(!info.isUnlocked, "Already unlocked");
 
-        lockInfo[_tokenId].claimedRewards = totalAmount;
-        lockInfo[_tokenId].isUnlocked = true;
+            stakeNFT.transferFrom(address(this), msg.sender, _tokenIds[i]);
+            
+            uint256 totalAmount = _rewardAmount(_tokenIds[i]);
+            uint256 unclaminedAmount = totalAmount - info.claimedRewards;
+            rewardsToken.transferFrom(vaultWallet, msg.sender, unclaminedAmount);
 
-        emit NFTUnLocked(msg.sender, _tokenId);
+            lockInfo[_tokenIds[i]].claimedRewards = totalAmount;
+            lockInfo[_tokenIds[i]].isUnlocked = true;
+        }
+
+        emit NFTUnLocked(msg.sender, _tokenIds);
     }
 
     /**
