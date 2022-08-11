@@ -2,17 +2,20 @@
 pragma solidity >=0.8.4;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
-contract NFTStaking is Ownable {
+contract NFTStaking is Ownable, ReentrancyGuard {
     using Address for address;
+    using SafeERC20 for IERC20;
 
-    IERC20 public immutable rewardToken;
+    IERC20 public immutable rewardsToken;
     IERC721 public immutable stakeNFT;
-    IERC721 public immutable rewardNFT;
+    IERC721 public immutable rewardsNFT;
 
     uint256 public constant WAVE = 30 days;
     uint256 public lockPeriod;
@@ -38,16 +41,16 @@ contract NFTStaking is Ownable {
     event NFTUnLocked(address indexed owner, uint256 indexed tokenId);
     event RewardsClaimed(address indexed owner, uint256 indexed tokenId, uint256 rewards);
 
-    constructor(address _rewardToken, address _stakeNFT, address _rewardNFT) {
-        require(_rewardToken != address(0), "Invalid reward token");
+    constructor(address _rewardsToken, address _stakeNFT, address _rewardsNFT) {
+        require(_rewardsToken != address(0), "Invalid reward token");
         require(_stakeNFT != address(0), "Invalid stake NFT");
-        require(_rewardNFT != address(0), "Invalid reward NFT");
-        require(IERC165(_rewardNFT).supportsInterface(0x80ac58cd), "Non-erc721");
+        require(_rewardsNFT != address(0), "Invalid reward NFT");
+        require(IERC165(_rewardsNFT).supportsInterface(0x80ac58cd), "Non-erc721");
         require(IERC165(_stakeNFT).supportsInterface(0x80ac58cd), "Non-erc721");
 
-        rewardToken = IERC20(_rewardToken);
+        rewardsToken = IERC20(_rewardsToken);
         stakeNFT = IERC721(_stakeNFT);
-        rewardNFT = IERC721(_rewardNFT);
+        rewardsNFT = IERC721(_rewardsNFT);
     }
 
     /** MODIFIERS */
@@ -73,7 +76,7 @@ contract NFTStaking is Ownable {
     * @dev lock NFT into the contract
     * @param _tokenId token id to stake
     */
-    function lockNFT(uint256 _tokenId) external notContract {
+    function lockNFT(uint256 _tokenId) external notContract nonReentrant {
         stakeNFT.transferFrom(msg.sender, address(this), _tokenId);
         lockInfo[_tokenId] = LockInfo(msg.sender, block.timestamp, _tokenId, 0, false);
 
@@ -84,7 +87,7 @@ contract NFTStaking is Ownable {
     * @dev unlock NFT from the contract
     * @param _tokenId token id to unlock
     */
-    function unlockNFT(uint256 _tokenId) external notContract {
+    function unlockNFT(uint256 _tokenId) external notContract nonReentrant {
         LockInfo memory info = lockInfo[_tokenId];
         require(info.owner == msg.sender, "Not a token owner");
         require(info.lockedTime + lockPeriod < block.timestamp, "Not able to claim yet");
@@ -94,7 +97,7 @@ contract NFTStaking is Ownable {
         
         uint256 totalAmount = _rewardAmount(_tokenId);
         uint256 unclaminedAmount = totalAmount - info.claimedRewards;
-        rewardToken.transferFrom(vaultWallet, msg.sender, unclaminedAmount);
+        rewardsToken.transferFrom(vaultWallet, msg.sender, unclaminedAmount);
 
         lockInfo[_tokenId].claimedRewards = totalAmount;
         lockInfo[_tokenId].isUnlocked = true;
@@ -113,7 +116,7 @@ contract NFTStaking is Ownable {
 
         uint256 totalAmount = _rewardAmount(_tokenId);
         uint256 unclaminedAmount = totalAmount - info.claimedRewards;
-        rewardToken.transferFrom(vaultWallet, msg.sender, unclaminedAmount);
+        rewardsToken.transferFrom(vaultWallet, msg.sender, unclaminedAmount);
 
         lockInfo[_tokenId].claimedRewards = totalAmount;
 
